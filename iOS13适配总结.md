@@ -46,7 +46,7 @@
 
   1. 如果项目中重复使用了同一种`UITextField`的样式，推荐第三种，创建`UITextField`的子类，
 
-- ### 子视图`leftView`和`rightView`显示异常
+- ### 子视图`leftView`和`rightView`显示异常
   
   需要将显示的视图包装在一个简单的`UIView`中或者在需要显示的视图子类化中，实现`systemLayoutSizeFittingSize`方法
 
