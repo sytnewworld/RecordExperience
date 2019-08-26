@@ -1,3 +1,10 @@
+<!--
+ * @Description: In User Settings Edit
+ * @Author: your name
+ * @Date: 2019-08-26 16:46:09
+ * @LastEditTime: 2019-08-26 17:18:55
+ * @LastEditors: Please set LastEditors
+ -->
 
 # iOS 13 适配总结
 
@@ -9,15 +16,15 @@
 
 网上看了一些朋友的分享，不足以解决项目运行遇到的问题，立马上苹果开发者网站查找相关资料，终于有所发现。现将项目中遇到的问题和解决方案记录一下：
 
-## iOS 13发现问题回顾
+## `iOS 13`发现问题回顾
 
 - 禁止用户获取或者设置私有属性：调用`setValue:forKeyPath:`、`valueForKey:`方法引起的App崩溃。例如：`UITextField`修改`_placeholderLabel.textColor`、`UISearchBar`修改`_searchTextField`
 - `UITextField`的`leftView`和`rightView`调整：部分视图位置显示异常
-- `UITabBar`部分调整：`UITabBarItem`播放gif显示比例有问题；`UITabBarItem`只显示图片时，图片位置偏移；`Badge`文字显示字体偏大
+- `UITabBar`部分调整：`UITabBarItem`播放gif显示比例有问题；`UITabBarItem`只显示图片时，图片位置偏移；`Badge`文字显示偏大
 - `UITableView`的`cell`选中样式失效
-- 第三方SDK的闪退问题
+- 第三方SDK的闪退兼容问题
 
-### 针对以上的所有问题，归纳为以下几点，并列举出解决方案的建议和示例代码
+### 针对以上的所有问题，归纳为以下几点，并列举出建议的解决方案和示例代码
 
 ## 1. `UITextField`
 
@@ -32,7 +39,7 @@
     [textField setValue:[UIFont boldSystemFontOfSize:16] forKeyPath:@"_placeholderLabel.font"];
     ```
 
-  - 设置`attributedPlaceholder`属性修改
+  - 设置`attributedPlaceholder`属性
   
     ```ObjectiveC
     textField.attributedPlaceholder = [[NSAttributedString alloc] initWithString:@"placeholder" attributes:@{NSForegroundColorAttributeName: [UIColor darkGrayColor], NSFontAttributeName: [UIFont systemFontOfSize:13]}];
@@ -47,9 +54,9 @@
     }
     ```
   
-  适配`iOS 13`时，按照实际情况选取后两种方案解决闪退问题。如果项目中重复使用了同一种`UITextField`的样式，推荐第三种，创建`UITextField`的子类。
+  适配`iOS 13`时，可根据实际情况选取后两种方案解决闪退问题。如果项目中重复使用了同一种`UITextField`的样式，推荐第三种，创建`UITextField`的子类。
 
-  > **修改建议：** 采用第二种方案，创建`UITextField`的`Category`文件，里面封装好修改`placeholder`的方法
+  > **个人建议：** 采用第二种方案，创建`UITextField`的`Category`文件，里面封装好修改`placeholder`的方法
 
   ```ObjectiveC
   // UITextField+SFPlaceholder.m文件
@@ -95,7 +102,7 @@
 
 - ### 子视图`leftView`和`rightView`显示异常
   
-  **解决方案：** 将需要显示的视图包装在一个简单的`UIView`中或者在需要显示的视图子类化中，实现`systemLayoutSizeFittingSize`方法，可根据实际情况选取不同的方案解决。
+  **解决方案：** 将需要显示的视图包装在一个简单的`UIView`中或者在需要显示的自定义视图子类里，实现`systemLayoutSizeFittingSize:`方法。
   
   ```ObjectiveC
   //  示例代码
@@ -117,43 +124,43 @@
 
   - 将显示的视图包装在一个简单的`UIView`中
   
-  ```ObjectiveC
-  //  iOS 13之后需要封装一层
-  - (UIView *)buildTextFieldRightView {
-      UIButton *button = [self buildButtonForRightView];
-      //  封装一层
-      UIView *rightView = [[UIView alloc] initWithFrame:CGRectZero];
-      [rightView addSubview:button];
+    ```ObjectiveC
+    //  iOS 13之后需要封装一层
+    - (UIView *)buildTextFieldRightView {
+        UIButton *button = [self buildButtonForRightView];
+        //  封装一层
+        UIView *rightView = [[UIView alloc] initWithFrame:button.bounds];
+        [rightView addSubview:button];
 
-      return rightView;
-  }
-  ```
+        return rightView;
+    }
+    ```
 
-  - 在需要显示的视图子类化中，实现`systemLayoutSizeFittingSize`方法
+  - 在需要显示的自定义视图子类里，实现`systemLayoutSizeFittingSize:`方法
 
-  ```ObjectiveC
-  //  CICustomButton.m文件
-  #import "CICustomButton.h"
+    ```ObjectiveC
+    //  CICustomButton.m文件
+    #import "CICustomButton.h"
 
-  @implementation CICustomButton
+    @implementation CICustomButton
 
-  //  iOS 13之后需要实现该方法
-  - (CGSize)systemLayoutSizeFittingSize:(CGSize)targetSize {
-      return CGSizeMake(100, 30);
-  }
+    //  iOS 13之后需要实现该方法
+    - (CGSize)systemLayoutSizeFittingSize:(CGSize)targetSize {
+        return CGSizeMake(100, 30);
+    }
 
-  @end
+    @end
 
-  ------------------------
-  //  Build TextFiled页面
+    ------------------------
+    //  Build TextFiled页面
 
-  //  iOS 13之后，修改UIButton为CICustomButton
-  - (UIButton *)buildButtonForRightView {
-      UIButton *button = [CICustomButton buttonWithType:UIButtonTypeRoundedRect];
-      //  do somethings
-      return button;
-  }
-  ```
+    //  iOS 13之后，修改UIButton为CICustomButton
+    - (UIButton *)buildButtonForRightView {
+        UIButton *button = [CICustomButton buttonWithType:UIButtonTypeRoundedRect];
+        //  do somethings
+        return button;
+    }
+    ```
 
 ## 2. `UISearchBar`
 
@@ -168,9 +175,7 @@ UITextField *searchTextField = [searchBar valueForKey:@"_searchField"];
 
 ```
 
-#### 解决方案
-
-- 可遍历`searchBar`的所有子视图，找到指定的`UITextField`类型的子视图，根据上述`UITextField`的相关方法修改属性
+**解决方案：** 可遍历`searchBar`的所有子视图，找到指定的`UITextField`类型的子视图，根据上述`UITextField`的相关方法修改属性；也可根据`UITextField`自定义`UISearchBar`的显示
 
 ```ObjectiveC
 //  UISearchBar+SFChangePrivateSubviews.m文件
@@ -205,13 +210,11 @@ UITextField *searchTextField = [searchBar valueForKey:@"_searchField"];
 
 ```
 
-- 或者可根据`UITextField`自定义`UISearchBar`的显示
-
 ## 3. `UITableView`
 
 `iOS 13`设置`contentView.backgroundColor`会影响`cell`的`selected`或者`highlighted`时的效果。
 
-例如：如果设置了`cell.selectedBackgroundView`，并修改`contentView.backgroundColor`为不透明颜色；`contentView`会遮盖`cell.selectedBackgroundView`，就会无法看到自定义的`selectedBackgroundView`的效果。
+例如：如果设置`cell.selectedBackgroundView`为自定义选中背景视图，并修改`contentView.backgroundColor`为某种不透明颜色；`contentView`就会遮盖`cell.selectedBackgroundView`，最终会导致无法看到自定义的`selectedBackgroundView`的效果。
 
 **解决方案：** 不设置`contentView.backgroundColor`时，默认值为`nil`；改为直接设置`cell`本身背景色
 
@@ -237,32 +240,31 @@ self.backgroundColor = [UIColor blueColor];
   ```ObjectiveC
   //  iOS 13需要添加
   if (@available(iOS 13, *)) {
-      [vc.tabBarItem setBadgeTextAttributes:@{NSFontAttributeName: SF_FONT_13} forState:UIControlStateNormal];
-      [vc.tabBarItem setBadgeTextAttributes:@{NSFontAttributeName: SF_FONT_13} forState:UIControlStateSelected];
+      [viewController.tabBarItem setBadgeTextAttributes:@{NSFontAttributeName: SF_FONT_13} forState:UIControlStateNormal];
+      [viewController.tabBarItem setBadgeTextAttributes:@{NSFontAttributeName: SF_FONT_13} forState:UIControlStateSelected];
   }
   ```
 
 - ### 字体颜色异常
 
-  `iOS 13`不设置`self.tabBar.barTintColor = [UIColor clearColor];`字体颜色会显示蓝色，`iOS 13`之前设置与否无影响
+  `iOS 13`不设置`self.tabBar.barTintColor = [UIColor clearColor];`时字体颜色会显示蓝色，`iOS 13`之前设置与否无影响
 
   **修改建议：** 设置`tabBar.barTintColor`颜色为`UIColor clearColor]`
 
   ```ObjectiveC
-
   //  自定义TabBarController.m文件
   - (void)viewDidLoad {
     [super viewDidLoad];
 
     self.tabBar.barTintColor = [UIColor clearColor];
-    //  或者可设置全局风格(不推荐，整个项目只有一种TabBarController时或者多个相同风格时可使用)
+    //  整个项目只有一种TabBarController时或者多个相同风格时可设置全局风格(其他情况不推荐)
     // [[UITabBar appearance] setBarTintColor:[UIColor clearColor]];
   }
   ```
 
 ## 5. `UITabBarItem`
 
-- ### 播放gif，设置`ImageView`图片时注意`scale`比例
+- ### 播放gif，设置`ImageView`图片时注意设置图片的`scale`比例
 
   ```ObjectiveC
   //  根据路径取gif数据
@@ -273,8 +275,7 @@ self.backgroundColor = [UIColor blueColor];
 
   //  iOS 13之前
   UIImage *image = [UIImage imageWithCGImage:imageRef]
-
-  //  iOS 13需要注意：添加scale比例
+  //  iOS 13需要注意：添加scale比例(该imageView将展示该动图效果)
   UIImage *image = [UIImage imageWithCGImage:imageRef scale:image.size.width / CGRectGetWidth(imageView.frame) orientation:UIImageOrientationUp];
 
   CGImageRelease(imageRef);
@@ -307,4 +308,4 @@ self.backgroundColor = [UIColor blueColor];
 
 1. [iOS & iPadOS 13 Beta 6 Release Notes](https://developer.apple.com/documentation/ios_ipados_release_notes/ios_ipados_13_beta_6_release_notes?preferredLanguage=occ)
 2. [友盟+推出全新SDK，适配iOS 13](https://info.umeng.com/detail?id=177&&cateId=1)
-  
+3. [新浪微博 IOS SDK](https://github.com/sinaweibosdk/weibo_ios_sdk)
