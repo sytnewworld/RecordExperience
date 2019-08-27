@@ -2,7 +2,7 @@
  * @Description: In User Settings Edit
  * @Author: your name
  * @Date: 2019-08-27 09:20:34
- * @LastEditTime: 2019-08-27 12:11:23
+ * @LastEditTime: 2019-08-27 14:43:13
  * @LastEditors: Please set LastEditors
  -->
 
@@ -381,10 +381,10 @@ self.backgroundColor = [UIColor blueColor];
 
   查看相关Github或者官方SDK下载地址，更新最新的SDK即可
 
-以上就是适配`iOS 13`时遇到问题的一些解决方案的建议。如果各位朋友也有一些新问题和解决方案，也可以在评论区留言，希望大家各抒己见，共同帮助解决问题和完善`iOS 13`适配总结。
+以上就是适配`iOS 13`的一些修改建议。如果各位朋友发现有一些新问题和解决方案，可以在评论区留言，希望大家畅所欲言，共同发现并帮助解决问题。
   
 ## 参考内容
 
 1. [iOS & iPadOS 13 Beta 6 Release Notes](https://developer.apple.com/documentation/ios_ipados_release_notes/ios_ipados_13_beta_6_release_notes?preferredLanguage=occ)
 2. [友盟+推出全新SDK，适配iOS 13](https://info.umeng.com/detail?id=177&&cateId=1)
-3. [新浪微博 IOS SDK](https://github.com/sinaweibosdk/weibo_ios_sdk)
+3. [新浪微博 iOS SDK](https://github.com/sinaweibosdk/weibo_ios_sdk)
