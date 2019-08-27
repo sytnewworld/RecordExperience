@@ -1,11 +1,3 @@
-<!--
- * @Description: In User Settings Edit
- * @Author: your name
- * @Date: 2019-08-26 16:46:09
- * @LastEditTime: 2019-08-26 17:18:55
- * @LastEditors: Please set LastEditors
- -->
-
 # iOS 13 适配总结
 
 > *自从6月份的**WWDC**大会展示了`iOS 13`的新版本之后，广大开发者朋友又面临着新一轮的系统升级适配工作；随着苹果9月份发布会脚步的临近，对公司的App升级适配势在必行。*
@@ -16,7 +8,7 @@
 
 网上看了一些朋友的分享，不足以解决项目运行遇到的问题，立马上苹果开发者网站查找相关资料，终于有所发现。现将项目中遇到的问题和解决方案记录一下：
 
-## `iOS 13`发现问题回顾
+## iOS 13发现问题回顾
 
 - 禁止用户获取或者设置私有属性：调用`setValue:forKeyPath:`、`valueForKey:`方法引起的App崩溃。例如：`UITextField`修改`_placeholderLabel.textColor`、`UISearchBar`修改`_searchTextField`
 - `UITextField`的`leftView`和`rightView`调整：部分视图位置显示异常
@@ -26,13 +18,13 @@
 
 ### 针对以上的所有问题，归纳为以下几点，并列举出建议的解决方案和示例代码
 
-## 1. `UITextField`
+## 1. UITextField
 
 - ### 设置`placeholder`引起的闪退
   
   **在`iOS 13`之前，设置`placeholder`有三种方案：**
   
-  - 基于`KVO`简单粗暴的修改私有属性(<font color="warning">iOS 13禁止使用</font>)
+  - 基于`KVO`简单粗暴的修改私有属性(`iOS 13`禁用)
 
     ```ObjectiveC
     [textField setValue:[UIColor redColor] forKeyPath:@"_placeholderLabel.textColor"];
@@ -162,7 +154,7 @@
     }
     ```
 
-## 2. `UISearchBar`
+## 2. UISearchBar
 
 ### 通过`valueForKey`、`setValue: forKeyPath`获取和设置私有属性，`setValue:forKey`没有问题
 
@@ -210,7 +202,7 @@ UITextField *searchTextField = [searchBar valueForKey:@"_searchField"];
 
 ```
 
-## 3. `UITableView`
+## 3. UITableView
 
 `iOS 13`设置`contentView.backgroundColor`会影响`cell`的`selected`或者`highlighted`时的效果。
 
@@ -229,7 +221,7 @@ self.backgroundColor = [UIColor blueColor];
 
 > 备注：`iOS 13`对于`UITableView`还有一些其他的修改地方，详细内容可查阅 [参考内容1](https://developer.apple.com/documentation/ios_ipados_release_notes/ios_ipados_13_beta_6_release_notes?preferredLanguage=occ)，整个网页搜索`UITableViewCell`即可
 
-## 4. `Tabbar`
+## 4. UITabbar
 
 - ### `Badge`文字显示不正常
   
@@ -262,7 +254,7 @@ self.backgroundColor = [UIColor blueColor];
   }
   ```
 
-## 5. `UITabBarItem`
+## 5. UITabBarItem
 
 - ### 播放gif，设置`ImageView`图片时注意设置图片的`scale`比例
 
@@ -297,12 +289,13 @@ self.backgroundColor = [UIColor blueColor];
 
 - ### 友盟社会化分享SDK：使用“新浪微博完整版”闪退
 
-  替换新浪微博最新的SDK版本
-  [Github地址](https://github.com/sinaweibosdk/weibo_ios_sdk/releases)，友盟集成SDK暂时未更新
+  替换新浪微博最新的SDK版本[Github地址](https://github.com/sinaweibosdk/weibo_ios_sdk/releases)，友盟集成SDK暂时未更新
 
 - ### 高德地图相关等其他第三方SDK更新
 
   查看相关Github或者官方SDK下载地址，更新最新的SDK即可
+
+以上就是适配`iOS 13`遇到问题的一些解决方案。如果各位朋友也有一些新问题和解决方案，也可以在评论区留言，大家各抒己见，共同帮助解决问题和完善`iOS 13`适配总结。
   
 ### 参考内容
 
