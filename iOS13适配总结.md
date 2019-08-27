@@ -2,28 +2,23 @@
  * @Description: In User Settings Edit
  * @Author: your name
  * @Date: 2019-08-27 09:20:34
- * @LastEditTime: 2019-08-27 11:31:58
+ * @LastEditTime: 2019-08-27 12:11:23
  * @LastEditors: Please set LastEditors
  -->
+
 # iOS 13 适配总结
 
 > *自从6月份的**WWDC**大会展示了`iOS 13`的新版本之后，广大开发者朋友又面临着新一轮的系统升级适配工作；随着苹果9月份发布会脚步的临近，对公司的App升级适配势在必行。*
 
----
-
-经历了系统升级`10.15 beta`版本、下载`Xcode 11 beta`版本、升级测试机到`iOS 13 beta`系统之后，紧张又激动地运行了公司的项目工程，泪崩...一系列的闪退bug和样式适配工作铺面而来(*又到了大展手脚的时候了* 😀😀)。
-
-网上看了一些朋友的分享，不足以解决项目运行遇到的问题，立马上苹果开发者网站查找相关资料，终于有所发现。现将项目中遇到的问题和解决方案记录一下：
-
 ## iOS 13发现问题回顾
 
-- 禁止用户获取或者设置私有属性：调用`setValue:forKeyPath:`、`valueForKey:`方法引起的App崩溃。例如：`UITextField`修改`_placeholderLabel.textColor`、`UISearchBar`修改`_searchField`
+- 禁止用户获取或直接设置私有属性：调用`setValue:forKeyPath:`、`valueForKey:`方法会引起App崩溃。例如：`UITextField`修改`_placeholderLabel.textColor`、`UISearchBar`修改`_searchField`
 - `UITextField`的`leftView`和`rightView`调整：部分视图位置显示异常
 - `UITabBar`部分调整：`UITabBarItem`播放gif显示比例有问题；`UITabBarItem`只显示图片时，图片位置偏移；`Badge`文字显示偏大
 - `UITableView`的`cell`选中样式失效
 - 第三方SDK的闪退兼容问题
 
-### 针对以上的所有问题，归纳为以下几点，并列举出建议的解决方案和示例代码
+### 将所有问题归纳总结，得出以下几点解决方案的建议和示例代码，记录一下
 
 ## 1. UITextField
 
@@ -55,7 +50,7 @@
   
   适配`iOS 13`时，可根据实际情况选取后两种方案解决闪退问题。如果项目中重复使用了同一种`UITextField`的样式，推荐使用第三种方案，创建`UITextField`的子类。
 
-  > **个人建议：** 采用第二种方案，创建`UITextField`的`Category`文件，里面封装好修改`placeholder`的方法
+  **修改建议： 采用第二种方案，创建`UITextField`的`Category`文件，里面封装好修改`placeholder`的方法，后续修改都可统一直接调用这些方法**
 
   ```ObjectiveC
   // UITextField+CIPlaceholder.m文件
@@ -101,7 +96,7 @@
 
 - ### 子视图`leftView`和`rightView`显示异常
   
-  **解决方案：** 将需要显示的视图包装在一个简单的`UIView`中或者在需要显示的自定义视图子类里，实现`systemLayoutSizeFittingSize:`方法。
+  **修改建议：将需要显示的视图包装在一个简单的`UIView`中或者在需要显示的自定义视图子类里，实现`systemLayoutSizeFittingSize:`方法**
   
   ```ObjectiveC
   //  示例代码
@@ -174,7 +169,7 @@ UITextField *searchTextField = [searchBar valueForKey:@"_searchField"];
 
 ```
 
-**解决方案：** 可遍历`searchBar`的所有子视图，找到指定的`UITextField`类型的子视图，根据上述`UITextField`的相关方法修改属性；也可根据`UITextField`自定义`UISearchBar`的显示
+**修改建议：可遍历`searchBar`的所有子视图，找到指定的`UITextField`类型的子视图，根据上述`UITextField`的相关方法修改属性；也可根据`UITextField`自定义`UISearchBar`的显示**
 
 ```ObjectiveC
 //  UISearchBar+CIChangePrivateSubviews.m文件
@@ -217,11 +212,11 @@ UITextField *searchTextField = [searchBar valueForKey:@"_searchField"];
 
 ## 3. UITableView
 
-`iOS 13`设置`contentView.backgroundColor`会影响`cell`的`selected`或者`highlighted`时的效果。
+### `iOS 13`设置`cell.contentView.backgroundColor`会影响`cell`的`selected`或者`highlighted`时的效果
 
-例如：如果设置`cell.selectedBackgroundView`为自定义选中背景视图，并修改`contentView.backgroundColor`为某种不透明颜色；`contentView`就会遮盖`cell.selectedBackgroundView`，最终会导致无法看到自定义的`selectedBackgroundView`的效果。
+例如：如果设置`cell.selectedBackgroundView`为自定义选中背景视图，并修改`cell.contentView.backgroundColor`为某种不透明颜色；`contentView`就会遮盖`cell.selectedBackgroundView`，最终导致无法看到自定义的`selectedBackgroundView`效果。
 
-**解决方案：** 不设置`contentView.backgroundColor`时，默认值为`nil`；改为直接设置`cell`本身背景色
+**修改建议：不设置`contentView.backgroundColor`时，默认值为`nil`；改为直接设置`cell`本身背景色**
 
 ```ObjectiveC
 //  自定义cell.m文件
@@ -232,7 +227,7 @@ self.contentView.backgroundColor = [UIColor blueColor];
 self.backgroundColor = [UIColor blueColor];
 ```
 
-> 备注：`iOS 13`对于`UITableView`还有一些其他的修改地方，详细内容可查阅最底部 [参考内容1](https://developer.apple.com/documentation/ios_ipados_release_notes/ios_ipados_13_beta_6_release_notes?preferredLanguage=occ)，整个网页搜索`UITableViewCell`即可
+备注：`iOS 13`对`UITableView`还做了一些其他的修改，详细内容可查阅最底部 [参考内容1](https://developer.apple.com/documentation/ios_ipados_release_notes/ios_ipados_13_beta_6_release_notes?preferredLanguage=occ)，整个网页搜索`UITableViewCell`即可
 
 ## 4. UITabbar
 
@@ -240,7 +235,7 @@ self.backgroundColor = [UIColor blueColor];
   
   `Badge`默认字体大小，`iOS 13`从之前13号字体变为17号字体
 
-  **修改建议：** 在初始化TabBarController时，在需要显示`Badge`的`ViewController`处调用`setBadgeTextAttributes:forState:`方法
+  **修改建议：在初始化TabBarController时，在需要显示`Badge`的`ViewController`处调用`setBadgeTextAttributes:forState:`方法**
 
   ```ObjectiveC
   //  iOS 13需要添加
@@ -254,7 +249,7 @@ self.backgroundColor = [UIColor blueColor];
 
   `iOS 13`不设置`self.tabBar.barTintColor = [UIColor clearColor];`时字体颜色会显示蓝色，`iOS 13`之前设置与否无影响
 
-  **修改建议：** 设置`tabBar.barTintColor`颜色为`UIColor clearColor]`
+  **修改建议：设置`tabBar.barTintColor`颜色为`UIColor clearColor]`**
 
   ```ObjectiveC
   //  自定义TabBarController.m文件
@@ -289,6 +284,7 @@ self.backgroundColor = [UIColor blueColor];
 - ### 播放gif，需找到设置的`ImageView`视图
 
     ```ObjectiveC
+    //  UITabBarItem+CIChangePrivateSubviews.m文件
     //  修改TabbarItem系统私有子视图
 
     #import "UITabBarItem+CIChangePrivateSubviews.h"
@@ -315,7 +311,7 @@ self.backgroundColor = [UIColor blueColor];
 
   `iOS 13`不需要调整`imageInsets`，图片会自动居中显示，如果设置会造成图片位置有些许偏移
 
-  **解决方案：** 添加版本限制条件，只在`iOS 13`之前调用设置方法
+  **修改建议：添加版本限制条件，只在`iOS 13`之前调用设置方法**
 
   ```ObjectiveC
   if (IOS_VERSION < 13.0) {
@@ -325,7 +321,7 @@ self.backgroundColor = [UIColor blueColor];
 
 ## 6. 弹出ViewController样式变化
 
-**模态展示`UIModalPresentationStyle`类型新增`UIModalPresentationAutomatic API_AVAILABLE(ios(13.0)) = -2`**
+### 模态展示`UIModalPresentationStyle`类型新增`UIModalPresentationAutomatic API_AVAILABLE(ios(13.0)) = -2`
 
 用户调用`presentViewController:animated:completion:`方法弹出视图时，`iOS 13`效果变化更炫酷，可以在`iOS 13`系统App中体验到这种变化；
 如果不希望使用这种效果，可利用`Runtime`方法，恢复设置`modalPresentationStyle`为`UIModalPresentationFullScreen`
@@ -385,9 +381,9 @@ self.backgroundColor = [UIColor blueColor];
 
   查看相关Github或者官方SDK下载地址，更新最新的SDK即可
 
-以上就是适配`iOS 13`遇到问题的一些解决方案。如果各位朋友也有一些新问题和解决方案，也可以在评论区留言，大家各抒己见，共同帮助解决问题和完善`iOS 13`适配总结。
+以上就是适配`iOS 13`时遇到问题的一些解决方案的建议。如果各位朋友也有一些新问题和解决方案，也可以在评论区留言，希望大家各抒己见，共同帮助解决问题和完善`iOS 13`适配总结。
   
-### 参考内容
+## 参考内容
 
 1. [iOS & iPadOS 13 Beta 6 Release Notes](https://developer.apple.com/documentation/ios_ipados_release_notes/ios_ipados_13_beta_6_release_notes?preferredLanguage=occ)
 2. [友盟+推出全新SDK，适配iOS 13](https://info.umeng.com/detail?id=177&&cateId=1)
