@@ -1,3 +1,10 @@
+<!--
+ * @Description: In User Settings Edit
+ * @Author: your name
+ * @Date: 2019-08-27 09:20:34
+ * @LastEditTime: 2019-08-27 11:31:58
+ * @LastEditors: Please set LastEditors
+ -->
 # iOS 13 适配总结
 
 > *自从6月份的**WWDC**大会展示了`iOS 13`的新版本之后，广大开发者朋友又面临着新一轮的系统升级适配工作；随着苹果9月份发布会脚步的临近，对公司的App升级适配势在必行。*
@@ -51,11 +58,11 @@
   > **个人建议：** 采用第二种方案，创建`UITextField`的`Category`文件，里面封装好修改`placeholder`的方法
 
   ```ObjectiveC
-  // UITextField+SFPlaceholder.m文件
+  // UITextField+CIPlaceholder.m文件
 
-  #import "UITextField+SFPlaceholder.h"
+  #import "UITextField+CIPlaceholder.h"
 
-  @implementation UITextField (SFPlaceholder)
+  @implementation UITextField (CIPlaceholder)
 
   - (void)setPlaceholderFont:(UIFont *)font {
 
@@ -170,13 +177,13 @@ UITextField *searchTextField = [searchBar valueForKey:@"_searchField"];
 **解决方案：** 可遍历`searchBar`的所有子视图，找到指定的`UITextField`类型的子视图，根据上述`UITextField`的相关方法修改属性；也可根据`UITextField`自定义`UISearchBar`的显示
 
 ```ObjectiveC
-//  UISearchBar+SFChangePrivateSubviews.m文件
+//  UISearchBar+CIChangePrivateSubviews.m文件
 
 //  修改SearchBar的系统私有子视图
 
-#import "UISearchBar+SFChangePrivateSubviews.h"
+#import "UISearchBar+CIChangePrivateSubviews.h"
 
-@implementation UISearchBar (SFChangePrivateSubviews)
+@implementation UISearchBar (CIChangePrivateSubviews)
 
 /// 修改SearchBar系统自带的TextField
 - (void)changeSearchTextFieldWithCompletionBlock:(void(^)(UITextField *textField))completionBlock {
@@ -185,17 +192,23 @@ UITextField *searchTextField = [searchBar valueForKey:@"_searchField"];
         return;
     }
 
-    for (UIView *subView in self.subviews) {
-        for (UIView *subView1 in subView.subviews) {
-            if ([subView1 isKindOfClass:NSClassFromString(@"_UISearchBarSearchContainerView")]) {
-                for (UIView *subview2 in subView1.subviews) {
-                    if ([subview2 isKindOfClass:[UITextField class]]) {
-                        completionBlock((UITextField *)subview2);
-                    }
-                }
-            }
+    UITextField *textField = [self findTextFieldWithView:self];
+    if (textField) {
+        completionBlock(textField);
+    }
+}
+
+/// 递归遍历UISearchBar的子视图，找到UITextField
+- (UITextField *)findTextFieldWithView:(UIView *)view {
+
+    for (UIView *subview in view.subviews) {
+        if ([subview isKindOfClass:[UITextField class]]) {
+            return (UITextField *)subview;
+        }else if (!IsArrEmpty(subview.subviews)) {
+            return [self findTextFieldWithView:subview];
         }
     }
+    return nil;
 }
 
 @end
@@ -232,8 +245,8 @@ self.backgroundColor = [UIColor blueColor];
   ```ObjectiveC
   //  iOS 13需要添加
   if (@available(iOS 13, *)) {
-      [viewController.tabBarItem setBadgeTextAttributes:@{NSFontAttributeName: SF_FONT_13} forState:UIControlStateNormal];
-      [viewController.tabBarItem setBadgeTextAttributes:@{NSFontAttributeName: SF_FONT_13} forState:UIControlStateSelected];
+      [viewController.tabBarItem setBadgeTextAttributes:@{NSFontAttributeName: CI_FONT_13} forState:UIControlStateNormal];
+      [viewController.tabBarItem setBadgeTextAttributes:@{NSFontAttributeName: CI_FONT_13} forState:UIControlStateSelected];
   }
   ```
 
@@ -273,6 +286,31 @@ self.backgroundColor = [UIColor blueColor];
   CGImageRelease(imageRef);
   ```
 
+- ### 播放gif，需找到设置的`ImageView`视图
+
+    ```ObjectiveC
+    //  修改TabbarItem系统私有子视图
+
+    #import "UITabBarItem+CIChangePrivateSubviews.h"
+
+    @implementation UITabBarItem (CIChangePrivateSubviews)
+
+    /// 修改UITabBarSwappableImageView
+    - (void)changeSwappableImageViewWithCompletionBlock:(void(^)(UIImageView *imageView))completionBlock {
+
+        if (!completionBlock) {
+            return;
+        }
+
+        UIView *tabBarButton = [self valueForKey:@"view"];
+        for (UIView *subviews in tabBarButton.subviews) {
+            if ([NSStringFromClass([subviews class]) isEqualToString:@"UITabBarSwappableImageView"]) {
+                completionBlock((UIImageView *)subviews);
+            }
+        }
+    }
+    ```
+
 - ### 只显示图片，没有文字时图片的位置调整
 
   `iOS 13`不需要调整`imageInsets`，图片会自动居中显示，如果设置会造成图片位置有些许偏移
@@ -285,7 +323,59 @@ self.backgroundColor = [UIColor blueColor];
   }
   ```
 
-## 6. 第三方SDK相关
+## 6. 弹出ViewController样式变化
+
+**模态展示`UIModalPresentationStyle`类型新增`UIModalPresentationAutomatic API_AVAILABLE(ios(13.0)) = -2`**
+
+用户调用`presentViewController:animated:completion:`方法弹出视图时，`iOS 13`效果变化更炫酷，可以在`iOS 13`系统App中体验到这种变化；
+如果不希望使用这种效果，可利用`Runtime`方法，恢复设置`modalPresentationStyle`为`UIModalPresentationFullScreen`
+
+```ObjectiveC
+//  UIViewController+CIChangePresentStyle.m文件
+
+#import "UIViewController+CIChangePresentStyle.h"
+
+@implementation UIViewController (CIChangePresentStyle)
+
++ (void)load {
+
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        Class class = [self class];
+        //替换方法
+        SEL originalSelector = @selector(presentViewController:animated:completion:);
+        SEL swizzledSelector = @selector(ci_presentViewController:animated:completion:);
+
+        Method originalMethod = class_getInstanceMethod(class, originalSelector);
+        Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);;
+        BOOL didAddMethod =
+        class_addMethod(class,
+                        originalSelector,
+                        method_getImplementation(swizzledMethod),
+                        method_getTypeEncoding(swizzledMethod));
+
+        if (didAddMethod) {
+            class_replaceMethod(class,
+                                swizzledSelector,
+                                method_getImplementation(originalMethod),
+                                method_getTypeEncoding(originalMethod));
+
+        } else {
+            method_exchangeImplementations(originalMethod, swizzledMethod);
+        }
+    });
+}
+
+- (void)ci_presentViewController:(UIViewController *)viewControllerToPresent animated:(BOOL)flag completion:(void (^)(void))completion {
+
+    viewControllerToPresent.modalPresentationStyle = UIModalPresentationFullScreen;
+    [self ci_presentViewController:viewControllerToPresent animated:flag completion:completion];
+}
+
+@end
+```
+
+## 7. 第三方SDK相关
 
 - ### 友盟社会化分享SDK：使用“新浪微博完整版”闪退
 
