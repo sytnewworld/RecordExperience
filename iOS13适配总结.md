@@ -10,7 +10,7 @@
 
 ## iOS 13发现问题回顾
 
-- 禁止用户获取或者设置私有属性：调用`setValue:forKeyPath:`、`valueForKey:`方法引起的App崩溃。例如：`UITextField`修改`_placeholderLabel.textColor`、`UISearchBar`修改`_searchTextField`
+- 禁止用户获取或者设置私有属性：调用`setValue:forKeyPath:`、`valueForKey:`方法引起的App崩溃。例如：`UITextField`修改`_placeholderLabel.textColor`、`UISearchBar`修改`_searchField`
 - `UITextField`的`leftView`和`rightView`调整：部分视图位置显示异常
 - `UITabBar`部分调整：`UITabBarItem`播放gif显示比例有问题；`UITabBarItem`只显示图片时，图片位置偏移；`Badge`文字显示偏大
 - `UITableView`的`cell`选中样式失效
@@ -46,7 +46,7 @@
     }
     ```
   
-  适配`iOS 13`时，可根据实际情况选取后两种方案解决闪退问题。如果项目中重复使用了同一种`UITextField`的样式，推荐第三种，创建`UITextField`的子类。
+  适配`iOS 13`时，可根据实际情况选取后两种方案解决闪退问题。如果项目中重复使用了同一种`UITextField`的样式，推荐使用第三种方案，创建`UITextField`的子类。
 
   > **个人建议：** 采用第二种方案，创建`UITextField`的`Category`文件，里面封装好修改`placeholder`的方法
 
@@ -156,7 +156,7 @@
 
 ## 2. UISearchBar
 
-### 通过`valueForKey`、`setValue: forKeyPath`获取和设置私有属性，`setValue:forKey`没有问题
+### 通过`valueForKey`、`setValue: forKeyPath`获取和设置私有属性程序崩溃
 
 ```ObjectiveC
 //  修改searchBar的textField
@@ -219,7 +219,7 @@ self.contentView.backgroundColor = [UIColor blueColor];
 self.backgroundColor = [UIColor blueColor];
 ```
 
-> 备注：`iOS 13`对于`UITableView`还有一些其他的修改地方，详细内容可查阅 [参考内容1](https://developer.apple.com/documentation/ios_ipados_release_notes/ios_ipados_13_beta_6_release_notes?preferredLanguage=occ)，整个网页搜索`UITableViewCell`即可
+> 备注：`iOS 13`对于`UITableView`还有一些其他的修改地方，详细内容可查阅最底部 [参考内容1](https://developer.apple.com/documentation/ios_ipados_release_notes/ios_ipados_13_beta_6_release_notes?preferredLanguage=occ)，整个网页搜索`UITableViewCell`即可
 
 ## 4. UITabbar
 
